@@ -4,6 +4,7 @@ import co.edu.utp.isc.agencia.exceptions.YaExistePaqueteException;
 import co.edu.utp.isc.agencia.model.dto.AdminDTO;
 import co.edu.utp.isc.agencia.model.dto.PaqueteDTO;
 import co.edu.utp.isc.agencia.model.dto.ServicioDTO;
+import co.edu.utp.isc.agencia.model.entities.AdminEntity;
 import co.edu.utp.isc.agencia.model.entities.PaqueteEntity;
 import co.edu.utp.isc.agencia.model.repository.AdminRepository;
 import co.edu.utp.isc.agencia.model.repository.PaqueteRepository;
@@ -15,8 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -50,17 +51,31 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public PaqueteDTO borrarPaquete(PaqueteDTO paqueteDTO){
-        return paqueteDTO;
+    public boolean borrarPaquete(PaqueteDTO paqueteDTO){
+
+        Optional<PaqueteEntity> recuperado = paqueteRepository.findById(paqueteDTO.getIdPaquete());
+
+        if(recuperado.isPresent()){
+            paqueteRepository.delete(recuperado.get());
+            return true;
+        }
+        return false;
     }
 
     @Override
-    public List<ServicioDTO> consultarServicios(){
-        return List.of();
+    public List<ServicioDTO> consultarServicios() {
+
+        return servicioRepository.findAll().stream()
+                .map(servicioEntity -> modelMapper.map(servicioEntity,ServicioDTO.class))
+                .collect(Collectors.toList());
     }
 
+
     @Override
-    public AdminDTO ingresar(AdminDTO adminDTO){
-        return adminDTO;
+    public boolean ingresar(AdminDTO adminDTO){
+
+        AdminEntity recuperado = adminRepository
+                .findByUsuarioAndContraseña(adminDTO.getUsuario(),adminDTO.getContraseña());
+        return recuperado != null;
     }
 }

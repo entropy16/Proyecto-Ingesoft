@@ -10,7 +10,7 @@ import java.util.List;
 public interface AdminService {
 
     PaqueteDTO crearPaquete(PaqueteDTO paqueteDTO) throws YaExistePaqueteException;
-    PaqueteDTO borrarPaquete(PaqueteDTO paqueteDTO);
+    boolean borrarPaquete(PaqueteDTO paqueteDTO);
     List<ServicioDTO> consultarServicios();
-    AdminDTO ingresar(AdminDTO adminDTO);
+    boolean ingresar(AdminDTO adminDTO);
 }

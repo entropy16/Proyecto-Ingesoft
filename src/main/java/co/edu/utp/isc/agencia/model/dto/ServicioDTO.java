@@ -13,8 +13,8 @@ public class ServicioDTO {
 
     private Long idServicio;
     private String ciudad;
-    private List excursiones;
-    private List hoteles;
-    private List vuelos;
-    private List buses;
+    private List<String> excursiones;
+    private List<String> hoteles;
+    private List<String> vuelos;
+    private List<String> buses;
 }

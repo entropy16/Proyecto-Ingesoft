@@ -1,8 +1,12 @@
 package co.edu.utp.isc.agencia.service;
 
 import co.edu.utp.isc.agencia.exceptions.YaExistePaqueteException;
+import co.edu.utp.isc.agencia.model.dto.AdminDTO;
 import co.edu.utp.isc.agencia.model.dto.PaqueteDTO;
+import co.edu.utp.isc.agencia.model.dto.ServicioDTO;
+import co.edu.utp.isc.agencia.model.entities.AdminEntity;
 import co.edu.utp.isc.agencia.model.entities.PaqueteEntity;
+import co.edu.utp.isc.agencia.model.entities.ServicioEntity;
 import co.edu.utp.isc.agencia.model.repository.AdminRepository;
 import co.edu.utp.isc.agencia.model.repository.PaqueteRepository;
 import co.edu.utp.isc.agencia.model.repository.ServicioRepository;
@@ -16,11 +20,12 @@ import org.modelmapper.ModelMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.*;
 
-public class AdminServiceTest {
+class AdminServiceTest {
 
     private PaqueteRepository paqueteRepository;
     private ServicioRepository servicioRepository;
@@ -29,20 +34,30 @@ public class AdminServiceTest {
     private ModelMapper modelMapper = new ModelMapper();
 
     private List<PaqueteDTO> paquetesPrueba = new ArrayList<>();
+    private List<ServicioEntity> serviciosPrueba = new ArrayList<>();
 
     @BeforeEach
     public void setUp(){
         paqueteRepository = Mockito.mock(PaqueteRepository.class);
+        servicioRepository = Mockito.mock(ServicioRepository.class);
+        adminRepository = Mockito.mock(AdminRepository.class);
         instance = new AdminServiceImpl(adminRepository,servicioRepository,paqueteRepository,modelMapper);
 
         PaqueteDTO paquete = new PaqueteDTO(1L,"Medellin","Cartagena");
+        PaqueteDTO paquete2 = new PaqueteDTO(2L,"Medellin","Buenaventura");
 
         paquetesPrueba.add(paquete);
+        paquetesPrueba.add(paquete2);
+
+        ServicioEntity servicio = new ServicioEntity(1L,"Medellin",List.of("Metro","Comuna13"),
+                List.of("Micasa"), List.of("Avianca"),List.of("FlotaOccidental"));
+
+        serviciosPrueba.add(servicio);
     }
 
     @Test
     @DisplayName("Crear paquete. ya existe paquete")
-    public void crearPaqueteTest1(){
+    void crearPaqueteTestExist(){
 
         when(paqueteRepository.findByCiudadIntermediaAndCiudadFinal("Medellin","Cartagena"))
                 .thenReturn(Optional.of(new PaqueteEntity(3L, "Medellin", "Cartagena")));
@@ -55,7 +70,7 @@ public class AdminServiceTest {
 
     @Test
     @DisplayName("Crear paquete. No existe aún el paquete")
-    public void crearPaqueteTest2(){
+    void crearPaqueteTestNoExist(){
 
         when(paqueteRepository.findByCiudadIntermediaAndCiudadFinal("Medellin","Cartagena"))
                 .thenReturn(Optional.empty());
@@ -71,6 +86,66 @@ public class AdminServiceTest {
         } catch (YaExistePaqueteException e) {
             fail("Saltó excepción inesperada: YaExtistePaqueteException");
         }
+    }
 
+    @Test
+    @DisplayName("Borrar Paquete. Existe el paquete")
+    void borrarPaqueteTestExist() {
+
+        when(paqueteRepository.findById(1L))
+                .thenReturn(Optional.of(new PaqueteEntity(1L,"Medellin","Cartagena")));
+
+        boolean result = instance.borrarPaquete(paquetesPrueba.get(0));
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("Borrar Paquete. No existe el paquete")
+    void borrarPaqueteNoExist() {
+
+        when(paqueteRepository.findById(1L))
+                .thenReturn(Optional.empty());
+
+        boolean result = instance.borrarPaquete(paquetesPrueba.get(0));
+
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("Consultar Servicios")
+    void consultarServiciosTest() {
+
+        when(servicioRepository.findAll())
+                .thenReturn(serviciosPrueba);
+
+        List<ServicioDTO> result = instance.consultarServicios();
+
+        assertThat(result).hasSize(1)
+                .usingRecursiveFieldByFieldElementComparator().isEqualTo(serviciosPrueba);
+    }
+
+    @Test
+    @DisplayName("Ingresar. Admin no existe")
+    void ingresarTestNoExist() {
+
+        when(adminRepository.findByUsuarioAndContraseña("admin","contraseña"))
+                .thenReturn(null);
+
+        boolean result = instance.ingresar(new AdminDTO(1L,"admin","contraseña"));
+
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("Ingresar. Admin existe")
+    void ingresarTestExist() {
+
+        when(adminRepository.findByUsuarioAndContraseña("admin","contraseña"))
+                .thenReturn(new AdminEntity(1L,"admin","contraseña"));
+
+        boolean result = instance.ingresar(new AdminDTO(1L,"admin","contraseña"));
+
+        assertThat(result).isTrue();
     }
 }

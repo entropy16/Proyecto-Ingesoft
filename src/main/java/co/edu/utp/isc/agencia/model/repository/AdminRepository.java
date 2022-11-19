@@ -5,6 +5,5 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface AdminRepository extends CrudRepository<AdminEntity, Long> {
 
-    AdminEntity findByUsuario(String usuario);
-
+    AdminEntity findByUsuarioAndContraseña(String usuario, String contraseña);
 }
